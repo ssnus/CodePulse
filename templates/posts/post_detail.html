@@ -1,0 +1,108 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/post_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="post-detail-container">
+    <div class="post-detail-header">
+        {% if post.author.profile.avatar %}
+            <img src="{{ post.author.profile.avatar.url }}" class="post-detail-avatar" alt="Avatar">
+        {% else %}
+            <div class="post-detail-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-person" style="font-size: 3rem; color: white;"></i>
+            </div>
+        {% endif %}
+        <div class="post-detail-author">
+            <div class="post-detail-author-name">{{ post.author.username }}</div>
+            <div class="post-detail-time">{{ post.created_at|date:"d.m.Y H:i" }}</div>
+        </div>
+    </div>
+
+    <div class="post-detail-content">{{ post.content }}</div>
+
+    {% if post.attachments.all %}
+        <div class="mb-3">
+            {% for att in post.attachments.all %}
+                {% if att.is_image %}
+                    <img src="{{ att.file.url }}" class="post-detail-image mb-3" alt="Attachment">
+                {% else %}
+                    <a href="{{ att.file.url }}" target="_blank" class="btn btn-outline-primary mb-2">
+                        <i class="bi bi-paperclip"></i> {{ att.file.name|slice:"-20:" }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% elif post.image %}
+        {% if post.is_image %}
+            <img src="{{ post.image.url }}" class="post-detail-image" alt="Post image">
+        {% else %}
+            <a href="{{ post.image.url }}" target="_blank" class="btn btn-outline-primary mb-3">
+                <i class="bi bi-paperclip"></i> Открыть вложение
+            </a>
+        {% endif %}
+    {% endif %}
+
+    <div class="post-detail-actions">
+        <a href="{% url 'home' %}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> В ленту
+        </a>
+        <div class="d-flex gap-2">
+            <form method="post" action="{% url 'post_like_toggle' post.pk %}?next=post_detail">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-light">
+                    {% if user in post.likes.all %}
+                        <i class="bi bi-heart-fill"></i>
+                    {% else %}
+                        <i class="bi bi-heart"></i>
+                    {% endif %}
+                    {{ post.total_likes }}
+                </button>
+            </form>
+            {% if user.is_authenticated and post.author == user %}
+                <a href="{% url 'post_delete' post.pk %}" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Удалить
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="post-detail-comments">
+        <h5 class="mb-3"><i class="bi bi-chat-dots"></i> Комментарии ({{ post.total_comments }})</h5>
+
+        {% if comments %}
+            <div class="post-comments-list">
+                {% for comment in comments %}
+                    <div class="post-comment">
+                        <div class="post-comment-header">
+                            <strong>{{ comment.author.username }}</strong>
+                            <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+                        </div>
+                        <div class="post-comment-body">
+                            {{ comment.content }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">Комментариев пока нет. Будьте первым!</p>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+            <form method="post" class="mt-3">
+                {% csrf_token %}
+                {{ form }}
+                <button type="submit" class="btn btn-primary mt-2">
+                    <i class="bi bi-send"></i> Отправить
+                </button>
+            </form>
+        {% else %}
+            <p class="text-muted mt-3">Чтобы оставить комментарий, <a href="{% url 'login' %}">войдите</a>.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

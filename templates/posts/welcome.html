@@ -1,14 +1,114 @@
-{% if user.is_authenticated %}
-    <a href="{% url 'home' %}" class="btn btn-primary btn-lg px-5 py-3">
-        Перейти в ленту
-    </a>
-{% else %}
-    <div class="d-grid gap-3 d-md-flex justify-content-center">
-        <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg px-4 py-3">
-            Войти
-        </a>
-        <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 py-3">
-            Регистрация
-        </a>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% if title %}{{ title }}{% else %}CodePulse — Социальная сеть для разработчиков{% endif %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="{% static 'css/dipoleswap.css' %}"/>
+</head>
+<body>
+
+<header>
+  <div class="logo">○ CodePulse</div>
+  <nav>
+    <a href="{% url 'home' %}">Главная</a>
+    <a href="#features">Возможности</a>
+    <a href="#community">Сообщество</a>
+    <a href="#projects">Проекты</a>
+    <a href="#about">О нас</a>
+  </nav>
+
+  {% if user.is_authenticated %}
+    <a class="connect-btn" href="{% url 'home' %}">Go to Feed</a>
+  {% else %}
+    <a class="connect-btn" href="{% url 'login' %}">Войти</a>
+  {% endif %}
+</header>
+
+<section class="hero">
+  <div class="hero-content">
+    <h1>
+      Твой код —<br/>
+      <span style="background:linear-gradient(90deg,#00d4ff,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+        твой нетворк
+      </span><br/>
+      в CodePulse
+    </h1>
+    <p>Социальная сеть для разработчиков: профиль, проекты, посты, знакомства и рост карьеры — в одном месте.</p>
+
+    {% if user.is_authenticated %}
+      <a href="{% url 'home' %}" class="btn-primary">ПЕРЕЙТИ В ЛЕНТУ</a>
+    {% else %}
+      <a href="{% url 'register' %}" class="btn-primary">СОЗДАТЬ АККАУНТ</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="stats">
+  <div class="stat-card">
+    <h3>10k+</h3>
+    <p>Разработчиков</p>
+  </div>
+  <div class="stat-card">
+    <h3>50k+</h3>
+    <p>Постов в ленте</p>
+  </div>
+  <div class="stat-card">
+    <h3>5k+</h3>
+    <p>Проектов</p>
+  </div>
+  <div class="stat-card">
+    <h3>24/7</h3>
+    <p>Активность комьюнити</p>
+  </div>
+</section>
+
+<section class="earn-section" id="features">
+  <h2>Прокачай профиль<br/>и найди своих людей</h2>
+  <p style="font-size:1.3rem; max-width:700px; margin:1.5rem auto; opacity:0.9;">
+    Покажи стек, опыт, проекты и достижения — и получай предложения, коллаборации и новые знакомства.
+  </p>
+  {% if user.is_authenticated %}
+    <a href="{% url 'home' %}" class="btn-primary" style="margin:2rem 0;">ОТКРЫТЬ ЛЕНТУ →</a>
+  {% else %}
+    <a href="{% url 'register' %}" class="btn-primary" style="margin:2rem 0;">НАЧАТЬ →</a>
+  {% endif %}
+
+  <div class="pools" id="community">
+    <div class="pool-card">
+      <h4>Профиль разработчика</h4>
+      <div class="apr">Stack</div>
+      <p>Навыки, опыт, ссылки и портфолио</p>
     </div>
-{% endif %}
+    <div class="pool-card">
+      <h4>Лента и посты</h4>
+      <div class="apr">Feed</div>
+      <p>Делись находками, статьями и прогрессом</p>
+    </div>
+    <div class="pool-card">
+      <h4>Проекты</h4>
+      <div class="apr">Build</div>
+      <p>Собирай команду и показывай результаты</p>
+    </div>
+    <div class="pool-card">
+      <h4>Друзья и подписки</h4>
+      <div class="apr">Connect</div>
+      <p>Находи людей по интересам и стеку</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="socials">
+    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+    <a href="#" aria-label="Discord"><i class="fab fa-discord"></i></a>
+    <a href="#" aria-label="Telegram"><i class="fab fa-telegram"></i></a>
+  </div>
+  <p style="margin-top:2rem;" id="about">© 2026 CodePulse. Социальная сеть для разработчиков.</p>
+</footer>
+
+<script src="{% static 'js/dipoleswap.js' %}"></script>
+</body>
+</html>

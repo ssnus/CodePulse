@@ -1,0 +1,31 @@
+.feed-compose-card textarea {
+  min-height: 120px;
+  max-height: 820px;
+  resize: vertical;
+  overflow-y: auto;
+}
+
+.post-comment-form textarea {
+  min-height: 48px;
+  max-height: 140px;
+  resize: vertical;
+  overflow-y: auto;
+}
+
+.feed-compose-card input[type="file"] {
+  max-width: 100%;
+  display: none;
+}
+
+.post-card {
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+.feed-attach .btn {
+  border-radius: 999px;
+}

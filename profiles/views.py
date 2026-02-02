@@ -9,7 +9,10 @@ from .models import Profile, Follow
 @login_required
 def profile_view(request, username):
     """Просмотр профиля пользователя"""
-    user = get_object_or_404(User, username=username)
+    user = get_object_or_404(
+        User.objects.select_related('profile').prefetch_related('posts__attachments'),
+        username=username,
+    )
     profile = get_object_or_404(Profile, user=user)
 
     # Проверяем, подписан ли текущий пользователь на этого пользователя

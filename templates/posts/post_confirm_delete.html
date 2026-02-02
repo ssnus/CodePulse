@@ -1,0 +1,106 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.delete-confirm-container {
+    max-width: 600px;
+    margin: 100px auto;
+    background: rgba(20, 30, 60, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(255, 107, 107, 0.2);
+}
+
+.delete-icon {
+    font-size: 5rem;
+    color: #ff6b6b;
+    margin-bottom: 20px;
+}
+
+.delete-title {
+    font-size: 2rem;
+    color: #ff6b6b;
+    margin-bottom: 20px;
+}
+
+.delete-message {
+    color: #e0f7ff;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.delete-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.btn-delete {
+    background: linear-gradient(90deg, #ff6b6b, #ff4444);
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+}
+
+.btn-delete:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(255, 107, 107, 0.5);
+}
+
+.btn-cancel {
+    background: transparent;
+    color: #a0d0ff;
+    border: 2px solid #a0d0ff;
+    padding: 12px 40px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-cancel:hover {
+    background: rgba(160, 208, 255, 0.1);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-confirm-container">
+    <div class="delete-icon">
+        <i class="bi bi-exclamation-triangle"></i>
+    </div>
+    <h1 class="delete-title">Удалить пост?</h1>
+    <p class="delete-message">
+        Вы уверены, что хотите удалить этот пост? Это действие нельзя отменить.
+    </p>
+
+    <div class="delete-buttons">
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-delete">
+                <i class="bi bi-trash"></i> Да, удалить
+            </button>
+        </form>
+        <a href="{% url 'home' %}" class="btn-cancel">
+            <i class="bi bi-x-circle"></i> Отмена
+        </a>
+    </div>
+</div>
+{% endblock %}
