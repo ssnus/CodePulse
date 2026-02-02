@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  web:
+    build: .
+    command: gunicorn --workers=3 --bind 0.0.0.0:8000 social_network.wsgi:application
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      - db
+    environment:
+      - DEBUG=0
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/social_network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      - web
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=social_network
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+volumes:
+  static_volume:
+  media_volume:
+  postgres_data:
