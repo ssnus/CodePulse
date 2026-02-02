@@ -1,0 +1,188 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Заголовок профиля -->
+    <div class="profile-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" class="profile-avatar" alt="Avatar">
+                    {% else %}
+                        <div class="profile-avatar d-flex align-items-center justify-content-center bg-light text-secondary">
+                            <i class="bi bi-person-circle" style="font-size: 8rem;"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-10">
+                    <h1 class="display-4 mb-2">{{ user_profile.username }}</h1>
+                    <p class="lead mb-0">{{ profile.bio|default:"Пользователь ещё не заполнил информацию о себе" }}</p>
+
+                    {% if user_profile.first_name or user_profile.last_name %}
+                        <p class="mb-0">
+                            <i class="bi bi-person"></i>
+                            {{ user_profile.first_name }} {{ user_profile.last_name }}
+                        </p>
+                    {% endif %}
+
+                    {% if profile.location %}
+                        <p class="mb-0">
+                            <i class="bi bi-geo-alt"></i> {{ profile.location }}
+                        </p>
+                    {% endif %}
+
+                    {% if profile.website %}
+                        <p class="mb-0">
+                            <i class="bi bi-link"></i>
+                            <a href="{{ profile.website }}" target="_blank" class="text-white">{{ profile.website }}</a>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Статистика -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <h3>{{ profile.get_following_count }}</h3>
+                    <p>Подписки</p>
+                </div>
+                <div class="col-md-3">
+                    <h3>{{ profile.get_followers_count }}</h3>
+                    <p>Подписчики</p>
+                </div>
+                <div class="col-md-3">
+                    <h3>{{ user_profile.posts.count }}</h3>
+                    <p>Посты</p>
+                </div>
+                <div class="col-md-3">
+                    <h3>{{ profile.created_at|date:"Y" }}</h3>
+                    <p>На платформе с</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основное содержимое -->
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Левая колонка - информация -->
+            <div class="col-md-3">
+                <div class="card profile-card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-info-circle"></i> Информация</h5>
+                        <hr>
+
+                        {% if profile.skills %}
+                            <p><strong>Навыки:</strong></p>
+                            <div class="mb-3">
+                                <span class="badge bg-primary">{{ profile.skills }}</span>
+                            </div>
+                        {% endif %}
+
+                        <p><strong>Дата регистрации:</strong><br>
+                            {{ profile.created_at|date:"d.m.Y" }}</p>
+
+                        <p><strong>Последнее обновление:</strong><br>
+                            {{ profile.updated_at|date:"d.m.Y H:i" }}</p>
+                    </div>
+                </div>
+
+                <!-- Кнопки действий -->
+                <div class="card mt-3">
+                    <div class="card-body">
+                        {% if request.user == user_profile %}
+                            <a href="{% url 'profile_edit' %}" class="btn btn-primary w-100 mb-2">
+                                <i class="bi bi-pencil"></i> Редактировать профиль
+                            </a>
+                        {% else %}
+                            {% if is_following %}
+                                <form method="post" action="{% url 'follow_toggle' user_profile.username %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger w-100">
+                                        <i class="bi bi-person-x"></i> Отписаться
+                                    </button>
+                                </form>
+                            {% else %}
+                                <form method="post" action="{% url 'follow_toggle' user_profile.username %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="bi bi-person-plus"></i> Подписаться
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if request.user.is_staff %}
+                            <a href="{% url 'admin:auth_user_change' user_profile.id %}" class="btn btn-outline-secondary w-100 mt-2">
+                                <i class="bi bi-gear"></i> Админка
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка - посты -->
+            <div class="col-md-9">
+                <h3><i class="bi bi-chat-square-text"></i> Посты пользователя</h3>
+                <hr>
+
+                {% if user_profile.posts.exists %}
+                    {% for post in user_profile.posts.all|slice:":10" %}
+                        <div class="card post-card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    {% if post.author.profile.avatar %}
+                                        <img src="{{ post.author.profile.avatar.url }}" class="avatar-sm me-2" alt="Avatar">
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ post.author.username }}</strong>
+                                        <small class="text-muted d-block">{{ post.created_at|date:"d.m.Y H:i" }}</small>
+                                    </div>
+                                </div>
+
+                                <p class="post-content">{{ post.content }}</p>
+
+                                {% if post.image %}
+                                    <img src="{{ post.image.url }}" class="post-image img-fluid rounded mb-2" alt="Post image">
+                                {% endif %}
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted">{{ post.total_likes }} <i class="bi bi-heart"></i></span>
+                                    <span class="text-muted">{{ post.total_comments }} <i class="bi bi-chat"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> У пользователя пока нет постов.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 60px 0;
+    color: white;
+    border-radius: 0 0 20px 20px;
+    margin-bottom: 30px;
+}
+
+.profile-avatar {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+</style>
+{% endblock %}

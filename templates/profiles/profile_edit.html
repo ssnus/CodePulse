@@ -1,0 +1,123 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-pencil"></i> {{ title }}</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if u_form.errors or p_form.errors %}
+                            <div class="alert alert-danger">
+                                <strong>Ошибка!</strong> Пожалуйста, исправьте ошибки в форме.
+                            </div>
+                        {% endif %}
+
+                        <h5 class="mb-3"><i class="bi bi-person"></i> Основная информация</h5>
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="{{ u_form.username.id_for_label }}" class="form-label">Имя пользователя</label>
+                            {{ u_form.username }}
+                            {% if u_form.username.errors %}
+                                <div class="text-danger small mt-1">{{ u_form.username.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Имя пользователя нельзя изменить</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ u_form.first_name.id_for_label }}" class="form-label">Имя</label>
+                                {{ u_form.first_name }}
+                                {% if u_form.first_name.errors %}
+                                    <div class="text-danger small mt-1">{{ u_form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ u_form.last_name.id_for_label }}" class="form-label">Фамилия</label>
+                                {{ u_form.last_name }}
+                                {% if u_form.last_name.errors %}
+                                    <div class="text-danger small mt-1">{{ u_form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ u_form.email.id_for_label }}" class="form-label">Email</label>
+                            {{ u_form.email }}
+                            {% if u_form.email.errors %}
+                                <div class="text-danger small mt-1">{{ u_form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="mb-3 mt-4"><i class="bi bi-file-person"></i> Профиль</h5>
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="{{ p_form.avatar.id_for_label }}" class="form-label">Аватар</label>
+                            {{ p_form.avatar }}
+                            {% if p_form.avatar.errors %}
+                                <div class="text-danger small mt-1">{{ p_form.avatar.errors }}</div>
+                            {% endif %}
+                            {% if profile.avatar %}
+                                <div class="mt-2">
+                                    <img src="{{ profile.avatar.url }}" class="img-thumbnail" width="150" alt="Current avatar">
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ p_form.bio.id_for_label }}" class="form-label">О себе</label>
+                            {{ p_form.bio }}
+                            {% if p_form.bio.errors %}
+                                <div class="text-danger small mt-1">{{ p_form.bio.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ p_form.location.id_for_label }}" class="form-label">Местоположение</label>
+                            {{ p_form.location }}
+                            {% if p_form.location.errors %}
+                                <div class="text-danger small mt-1">{{ p_form.location.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ p_form.website.id_for_label }}" class="form-label">Сайт</label>
+                            {{ p_form.website }}
+                            {% if p_form.website.errors %}
+                                <div class="text-danger small mt-1">{{ p_form.website.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ p_form.skills.id_for_label }}" class="form-label">Навыки (через запятую)</label>
+                            {{ p_form.skills }}
+                            {% if p_form.skills.errors %}
+                                <div class="text-danger small mt-1">{{ p_form.skills.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Например: Python, Django, JavaScript, React</small>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'profile' request.user.username %}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Отмена
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
