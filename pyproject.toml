@@ -1,0 +1,12 @@
+[project]
+name = "codepulse"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "django>=4.2.27",
+    "gunicorn>=25.0.1",
+    "pillow>=12.1.0",
+    "psycopg2-binary>=2.9.11",
+]
