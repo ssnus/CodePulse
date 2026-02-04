@@ -54,13 +54,19 @@ def profile_edit_view(request):
 
 @login_required
 def follow_toggle_view(request, username):
-    user_to_follow = get_object_or_404(User, username=username)
-    profile = user_to_follow.profile
+    user_to_toggle = get_object_or_404(User, username=username)
 
-    if request.user != user_to_follow:
-        if request.user in profile.followers.all():
-            profile.followers.remove(request.user)
-        else:
-            profile.followers.add(request.user)
+    if request.user == user_to_toggle:
+        messages.warning(request, "Вы не можете подписаться на самого себя.")
+        return redirect('profile', username=username)
+
+    follow_obj = Follow.objects.filter(follower=request.user, following=user_to_toggle)
+
+    if follow_obj.exists():
+        follow_obj.delete()
+        messages.info(request, f'Вы отписались от {username}')
+    else:
+        Follow.objects.create(follower=request.user, following=user_to_toggle)
+        messages.success(request, f'Вы подписались на {username}')
 
     return redirect('profile', username=username)
