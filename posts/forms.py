@@ -19,19 +19,26 @@ class PostForm(forms.ModelForm):
         max_length=1000,
     )
 
-    attachments = forms.FileField(
-        required=False,
-        widget=MultipleFileInput(
+    class Meta:
+        model = Post
+        fields = ['content']
+
+
+class CommentForm(forms.ModelForm):
+    content = forms.CharField(
+        widget=forms.Textarea(
             attrs={
-                'class': 'form-control feed-attachments-input',
-                'accept': 'image/*,text/plain,.txt,.md,.json,.log,.pdf,.doc,.docx',
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Оставьте комментарий...',
             }
         ),
-        label='Добавить вложения',
+        label='',
+        max_length=500,
     )
 
     class Meta:
-        model = Post
+        model = Comment
         fields = ['content']
 
 

@@ -12,33 +12,32 @@
             <div class="card feed-compose-card mb-4">
                 <div class="card-body">
                     <h5 class="card-title mb-3"><i class="bi bi-pencil-square"></i> Новый пост</h5>
-                    <form method="post" enctype="multipart/form-data">
+                    <form id="ajax-post-form" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-
-                        {% if form.errors %}
-                            <div class="alert alert-danger py-2">
-                                Пожалуйста, исправьте ошибки в форме.
-                            </div>
-                        {% endif %}
-
                         <div class="mb-3">
                             {{ form.content }}
                         </div>
-
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                             <div class="feed-attach">
-                                <label for="{{ form.attachments.id_for_label }}" class="btn btn-outline-primary btn-sm mb-0 js-attach-label">
+                                <label for="id_attachments" class="btn btn-outline-primary btn-sm mb-0 js-attach-label">
                                     <i class="bi bi-paperclip"></i> <span class="js-attach-text">Вложение</span>
                                 </label>
-                                {{ form.attachments }}
+                                <input type="file"
+                                       name="attachments"
+                                       id="id_attachments"
+                                       class="feed-attachments-input"
+                                       accept="image/*,text/plain,.txt,.md,.json,.log,.pdf,.doc,.docx"
+                                       multiple>
                             </div>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-send"></i> Опубликовать
                             </button>
                         </div>
                     </form>
-                </div>
+
+                    <div id="new-posts-target"></div>
             </div>
+</div>
 
             <h3 class="mb-3"><i class="bi bi-house-door"></i> Лента новостей</h3>
 
@@ -47,16 +46,26 @@
                     <div class="card post-card mb-3">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-3">
-                                {% if post.author.profile.avatar %}
-                                    <img src="{{ post.author.profile.avatar.url }}" class="avatar-sm me-2" alt="Avatar">
-                                {% endif %}
+                                <a href="{% url 'profile' post.author.username %}" class="text-decoration-none">
+                                    {% if post.author.profile.avatar and post.author.profile.avatar.name != 'avatars/default.jpg' %}
+                                        <img src="{{ post.author.profile.avatar.url }}" class="avatar-sm me-2" alt="Avatar">
+                                    {% else %}
+                                        <img src="{% static 'images/user.png' %}" class="avatar-sm me-2" alt="Default Avatar">
+                                    {% endif %}
+
+                                </a>
+
                                 <div>
-                                    <strong>{{ post.author.username }}</strong>
+                                    <a href="{% url 'profile' post.author.username %}" class="text-decoration-none">
+                                        <strong>{{ post.author.username }}</strong>
+                                    </a>
                                     <small class="text-muted d-block">{{ post.created_at|date:"d.m.Y H:i" }}</small>
                                 </div>
                             </div>
 
-                            <p class="post-content mb-3">{{ post.content }}</p>
+                            <a href="{% url 'post_detail' post.pk %}" class="text-decoration-none text-dark">
+                                <p class="post-content mb-3">{{ post.content }}</p>
+                            </a>
 
                             {% if post.attachments.all %}
                                 <div class="mb-3">
@@ -81,16 +90,18 @@
                             {% endif %}
 
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <form method="post" action="{% url 'post_like_toggle' post.pk %}">
+                                <form method="post" action="{% url 'post_like_toggle' post.pk %}" class="like-form">
                                     {% csrf_token %}
                                     <input type="hidden" name="next" value="home">
-                                    <button type="submit" class="btn btn-sm btn-outline-light">
-                                        {% if request.user in post.likes.all %}
-                                            <i class="bi bi-heart-fill"></i>
-                                        {% else %}
-                                            <i class="bi bi-heart"></i>
-                                        {% endif %}
-                                        {{ post.total_likes }}
+                                    <button type="submit" class="like-btn-raw">
+                                        <span class="like-icon">
+                                            {% if request.user in post.likes.all %}
+                                                <i class="bi bi-heart-fill text-danger"></i>
+                                            {% else %}
+                                                <i class="bi bi-heart"></i>
+                                            {% endif %}
+                                        </span>
+                                        <span class="like-count text-muted small">{{ post.total_likes }}</span>
                                     </button>
                                 </form>
                                 <div class="d-flex align-items-center gap-2">
@@ -100,9 +111,12 @@
                                         <i class="bi bi-chat"></i> {{ post.total_comments }}
                                     </button>
                                     {% if request.user == post.author %}
-                                        <a href="{% url 'post_detail' post.pk %}" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                        <form method="post" action="{% url 'post_delete' post.pk %}" style="display: inline;" onsubmit="return confirm('Вы уверены, что хотите удалить этот пост?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     {% endif %}
                                 </div>
                             </div>
@@ -139,11 +153,11 @@
         <div class="col-md-4">
             <div class="card profile-card">
                 <div class="card-body text-center">
-                    {% if request.user.profile.avatar %}
+                    {% if request.user.profile.avatar and request.user.profile.avatar.name != 'avatars/default.jpg' %}
                         <img src="{{ request.user.profile.avatar.url }}" class="profile-avatar mb-3" alt="Avatar">
                     {% else %}
                         <div class="profile-avatar d-flex align-items-center justify-content-center mb-3">
-                            <i class="bi bi-person-circle" style="font-size: 4.5rem;"></i>
+                            <img src="{% static 'images/user.png' %}" class="profile-avatar" alt="Default Avatar">
                         </div>
                     {% endif %}
 

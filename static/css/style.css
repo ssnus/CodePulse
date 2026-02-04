@@ -228,6 +228,26 @@ a:hover {
     box-shadow: 0 0 0 0.15rem rgba(0, 212, 255, 0.35);
 }
 
+.form-control:focus {
+    background: rgba(13, 22, 50, 1);
+    border-color: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+    outline: none;
+}
+
+textarea.form-control {
+    color: var(--text) !important;
+}
+
+.form-control {
+    caret-color: var(--accent);
+}
+.form-control::placeholder {
+    color: var(--muted);
+    opacity: 0.7;
+}
+
 .form-label,
 .text-muted {
     color: var(--muted) !important;

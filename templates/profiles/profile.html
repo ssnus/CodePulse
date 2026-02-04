@@ -1,16 +1,18 @@
 {% extends 'base/base.html' %}
 {% load static %}
-
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
 {% block content %}
 <section class="profile-header">
     <div class="container">
         <div class="row align-items-center g-4">
             <div class="col-12 col-md-3 col-lg-2 text-center">
-                {% if profile.avatar %}
+                {% if profile.avatar and profile.avatar.name != 'avatars/default.jpg' %}
                     <img src="{{ profile.avatar.url }}" class="profile-avatar" alt="Avatar">
                 {% else %}
                     <div class="profile-avatar d-flex align-items-center justify-content-center">
-                        <i class="bi bi-person-circle" style="font-size: 6.5rem;"></i>
+                        <img src="{% static 'images/user.png' %}" class="profile-avatar" alt="Default Avatar">
                     </div>
                 {% endif %}
             </div>
@@ -133,19 +135,22 @@
 
             {% if user_profile.posts.exists %}
                 {% for post in user_profile.posts.all|slice:":10" %}
-                    <div class="card post-card">
+                    <div class="card post-card mb-3">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-3">
-                                {% if post.author.profile.avatar %}
+                                {% if post.author.profile.avatar and post.author.profile.avatar.name != 'avatars/default.jpg' %}
                                     <img src="{{ post.author.profile.avatar.url }}" class="avatar-sm me-2" alt="Avatar">
+                                {% else %}
+                                    <img src="{% static 'images/user.png' %}" class="avatar-sm me-2" alt="Default Avatar">
                                 {% endif %}
-                                <div>
                                     <strong>{{ post.author.username }}</strong>
                                     <small class="text-muted d-block">{{ post.created_at|date:"d.m.Y H:i" }}</small>
                                 </div>
                             </div>
 
-                            <p class="post-content mb-3">{{ post.content }}</p>
+                            <a href="{% url 'post_detail' post.pk %}" class="text-decoration-none text-dark">
+                                <p class="post-content mb-3">{{ post.content }}</p>
+                            </a>
 
                             {% if post.attachments.all %}
                                 <div class="mb-3">
@@ -160,12 +165,54 @@
                                     {% endfor %}
                                 </div>
                             {% elif post.image %}
-                                <img src="{{ post.image.url }}" class="post-image img-fluid mb-3" alt="Post image">
+                                {% if post.is_image %}
+                                    <img src="{{ post.image.url }}" class="post-image img-fluid mb-3" alt="Post image">
+                                {% else %}
+                                    <a href="{{ post.image.url }}" target="_blank" class="btn btn-sm btn-outline-primary mb-3">
+                                        <i class="bi bi-paperclip"></i> Открыть вложение
+                                    </a>
+                                {% endif %}
                             {% endif %}
 
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted">{{ post.total_likes }} <i class="bi bi-heart"></i></span>
-                                <span class="text-muted">{{ post.total_comments }} <i class="bi bi-chat"></i></span>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <form method="post" action="{% url 'post_like_toggle' post.pk %}" class="like-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="profile"> <button type="submit" class="like-btn-raw">
+                                        <span class="like-icon">
+                                            {% if request.user in post.likes.all %}
+                                                <i class="bi bi-heart-fill text-danger"></i>
+                                            {% else %}
+                                                <i class="bi bi-heart"></i>
+                                            {% endif %}
+                                        </span>
+                                        <span class="like-count text-muted small">{{ post.total_likes }}</span>
+                                    </button>
+                                </form>
+
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary js-toggle-comment" data-post-id="{{ post.pk }}">
+                                        <i class="bi bi-chat"></i> {{ post.total_comments }}
+                                    </button>
+                                    {% if request.user == post.author %}
+                                        <form method="post" action="{% url 'post_delete' post.pk %}" style="display: inline;" onsubmit="return confirm('Вы уверены?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="post-comment-form d-none" data-post-id="{{ post.pk }}">
+                                <form method="post" action="{% url 'post_comment_create' post.pk %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="profile">
+                                    <textarea name="content" class="form-control mt-2" rows="2" placeholder="Напишите комментарий..."></textarea>
+                                    <button type="submit" class="btn btn-primary btn-sm mt-2">
+                                        <i class="bi bi-send"></i> Отправить
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -180,4 +227,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{% static 'js/home.js' %}"></script>
 {% endblock %}

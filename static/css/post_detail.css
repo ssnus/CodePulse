@@ -109,6 +109,6 @@
 
 .post-comment-body {
     color: #e0f7ff;
-    white-space: pre-wrap;
+    padding: 10px;
 }
 

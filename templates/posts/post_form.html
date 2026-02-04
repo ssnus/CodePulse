@@ -75,6 +75,7 @@
         {% if form.errors %}
             <div class="alert alert-danger" style="border-radius: 15px; margin-bottom: 20px;">
                 <strong>Ошибка!</strong> Пожалуйста, исправьте ошибки в форме.
+                <small>{{ form.non_field_errors }} {{ form.attachments.errors }}</small>
             </div>
         {% endif %}
 
@@ -85,16 +86,22 @@
             {% endif %}
         </div>
 
-        <div class="mb-4">
-            <label for="id_image" class="btn btn-primary" style="background: linear-gradient(90deg, #00d4ff, #0099cc); border: none; padding: 10px 30px; border-radius: 50px; cursor: pointer;">
-                <i class="bi bi-image"></i> Выбрать фото
+        <div class="mb-4 text-center">
+            <label for="id_attachments" class="btn btn-primary" style="background: linear-gradient(90deg, #00d4ff, #0099cc); border: none; padding: 10px 30px; border-radius: 50px; cursor: pointer;">
+                <i class="bi bi-image"></i> Выбрать файлы
             </label>
-            {{ form.image }}
-            {% if form.image.errors %}
-                <div class="text-danger small mt-2">{{ form.image.errors }}</div>
+
+            <div style="display: none;">
+                {{ form.attachments }}
+            </div>
+
+            {% if form.attachments.errors %}
+                <div class="text-danger small mt-2">{{ form.attachments.errors }}</div>
             {% endif %}
+
             <div id="image-preview" class="mt-3" style="display: none;">
                 <img id="preview-img" src="" alt="Preview" style="max-width: 100%; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);">
+                <p class="text-muted small mt-2">Файл выбран</p>
             </div>
         </div>
 
@@ -110,21 +117,29 @@
 </div>
 
 <script>
-document.getElementById('id_image').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const preview = document.getElementById('image-preview');
-    const previewImg = document.getElementById('preview-img');
+// Исправлено: слушаем id_attachments
+const fileInput = document.getElementById('id_attachments');
+if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
 
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            previewImg.src = event.target.result;
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                previewImg.src = event.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else if (file) {
+            // Если выбран не файл изображения (например, текст)
             preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    } else {
-        preview.style.display = 'none';
-    }
-});
+            previewImg.style.display = 'none';
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+}
 </script>
 {% endblock %}

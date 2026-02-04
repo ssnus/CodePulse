@@ -50,3 +50,17 @@ def profile_edit_view(request):
         'title': 'Редактирование профиля'
     }
     return render(request, 'profiles/profile_edit.html', context)
+
+
+@login_required
+def follow_toggle_view(request, username):
+    user_to_follow = get_object_or_404(User, username=username)
+    profile = user_to_follow.profile
+
+    if request.user != user_to_follow:
+        if request.user in profile.followers.all():
+            profile.followers.remove(request.user)
+        else:
+            profile.followers.add(request.user)
+
+    return redirect('profile', username=username)

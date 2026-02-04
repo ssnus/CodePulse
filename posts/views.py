@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.urls import reverse
 from .models import Post, Comment, Attachment
 from .forms import PostForm, CommentForm
 
@@ -17,17 +19,45 @@ def home_view(request):
 
         # Форма для создания поста
         if request.method == 'POST':
-            form = PostForm(request.POST, request.FILES)
-            if form.is_valid():
-                post = form.save(commit=False)
-                post.author = request.user
-                post.save()
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                form = PostForm(request.POST, request.FILES)
+                if form.is_valid():
+                    post = form.save(commit=False)
+                    post.author = request.user
+                    post.save()
 
-                for f in request.FILES.getlist('attachments'):
-                    Attachment.objects.create(post=post, file=f)
+                    files_saved = 0
+                    if 'attachments' in request.FILES:
+                        for f in request.FILES.getlist('attachments'):
+                            Attachment.objects.create(post=post, file=f)
+                            files_saved += 1
 
-                messages.success(request, 'Пост успешно опубликован!')
-                return redirect('home')
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'Пост успешно опубликован! ({files_saved} файлов)',
+                        'redirect_url': reverse('home')
+                    })
+                else:
+                    errors = {}
+                    for field, error_list in form.errors.items():
+                        errors[field] = [str(e) for e in error_list]
+                    return JsonResponse({
+                        'success': False,
+                        'errors': errors
+                    }, status=400)
+            else:
+                form = PostForm(request.POST, request.FILES)
+                if form.is_valid():
+                    post = form.save(commit=False)
+                    post.author = request.user
+                    post.save()
+
+                    if 'attachments' in request.FILES:
+                        for f in request.FILES.getlist('attachments'):
+                            Attachment.objects.create(post=post, file=f)
+
+                    messages.success(request, 'Пост успешно опубликован!')
+                    return redirect('home')
         else:
             form = PostForm()
 
@@ -51,11 +81,14 @@ def post_create_view(request):
             post.author = request.user
             post.save()
 
-            for f in request.FILES.getlist('attachments'):
-                Attachment.objects.create(post=post, file=f)
+            if 'attachments' in request.FILES:
+                for f in request.FILES.getlist('attachments'):
+                    Attachment.objects.create(post=post, file=f)
 
             messages.success(request, 'Пост успешно опубликован!')
             return redirect('home')
+        else:
+            print("ОШИБКИ ФОРМЫ:", form.errors.as_data())
     else:
         form = PostForm()
 
@@ -119,17 +152,25 @@ def post_detail_view(request, pk):
 @login_required
 def post_like_toggle_view(request, pk):
     post = get_object_or_404(Post, pk=pk)
+    liked = False
 
     if request.user in post.likes.all():
         post.likes.remove(request.user)
+        liked = False
     else:
         post.likes.add(request.user)
+        liked = True
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'liked': liked,
+            'total_likes': post.likes.count()
+        })
 
     next_url = request.POST.get('next') or request.GET.get('next') or 'home'
     if next_url == 'post_detail':
         return redirect('post_detail', pk=post.pk)
     return redirect(next_url)
-
 
 @login_required
 def post_comment_create_view(request, pk):
