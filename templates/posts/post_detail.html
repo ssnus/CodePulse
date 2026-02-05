@@ -10,15 +10,17 @@
 {% block content %}
 <div class="post-detail-container">
     <div class="post-detail-header">
-        {% if post.author.profile.avatar %}
-            <img src="{{ post.author.profile.avatar.url }}" class="post-detail-avatar" alt="Avatar">
-        {% else %}
-            <div class="post-detail-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
-                <i class="bi bi-person" style="font-size: 3rem; color: white;"></i>
-            </div>
-        {% endif %}
+        <a href="{% url 'profile' post.author.username %}" class="text-decoration-none">
+            {% if post.author.profile.avatar and post.author.profile.avatar.name != 'avatars/default.jpg' %}
+                <img src="{{ post.author.profile.avatar.url }}" class="post-detail-avatar" alt="Avatar">
+            {% else %}
+                <img src="{% static 'images/user.png' %}" class="post-detail-avatar" alt="Default Avatar">
+            {% endif %}
+        </a>
         <div class="post-detail-author">
-            <div class="post-detail-author-name">{{ post.author.username }}</div>
+            <a href="{% url 'profile' post.author.username %}" class="text-decoration-none color-inherit">
+                <div class="post-detail-author-name">{{ post.author.username }}</div>
+            </a>
             <div class="post-detail-time">{{ post.created_at|date:"d.m.Y H:i" }}</div>
         </div>
     </div>
