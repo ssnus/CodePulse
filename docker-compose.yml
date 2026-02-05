@@ -3,7 +3,7 @@ version: '3.9'
 services:
   web:
     build: .
-    command: gunicorn --workers=3 --bind 0.0.0.0:8000 social_network.wsgi:application
+    command: sh -c "python manage.py collectstatic --noinput && gunicorn --workers=3 --bind 0.0.0.0:8000 social_network.wsgi:application"
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
