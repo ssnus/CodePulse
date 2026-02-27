@@ -19,7 +19,7 @@
     <!-- Навигация -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">
+            <a class="navbar-brand" href="{% url 'posts:home' %}">
                 <i class="bi bi-people"></i> CodePulse
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -29,19 +29,25 @@
                 <ul class="navbar-nav me-auto">
                     {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'posts:home' %}">
                             <i class="bi bi-house-door"></i> Лента
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if '/profile/' in request.path %}active{% endif %}" href="{% url 'profile' user.username %}">
+                        <a class="nav-link {% if '/profile/' in request.path %}active{% endif %}" href="{% url 'profiles:profile' user.username %}">
                             <i class="bi bi-person"></i> Мой профиль
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if '/search/' in request.path %}active{% endif %}" href="#">
-                            <i class="bi bi-search"></i> Поиск
-                        </a>
+                    <li class="nav-item" style="display:flex; align-items:center;">
+                        <div class="position-relative mx-lg-3">
+                            <form action="{% url 'posts:search' %}" method="get" class="d-flex" id="search-form">
+                                <input name="q" id="search-input" class="form-control form-control-sm bg-dark text-white border-secondary"
+                                       type="search" placeholder="Поиск по CodePulse..." autocomplete="off">
+                            </form>
+                            <div id="search-results-dropdown" class="list-group position-absolute w-100 shadow-lg d-none"
+                                 style="z-index: 1050; top: 40px;">
+                            </div>
+                        </div>
                     </li>
                     {% endif %}
                 </ul>
@@ -58,21 +64,21 @@
                             {{ user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'profile_edit' %}">
+                            <li><a class="dropdown-item" href="{% url 'profiles:profile_edit' %}">
                                 <i class="bi bi-gear"></i> Настройки
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'logout' %}">
+                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">
                                 <i class="bi bi-box-arrow-right"></i> Выход
                             </a></li>
                         </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Вход</a>
+                        <a class="nav-link" href="{% url 'accounts:login' %}">Вход</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'register' %}">Регистрация</a>
+                        <a class="nav-link" href="{% url 'accounts:register' %}">Регистрация</a>
                     </li>
                     {% endif %}
                 </ul>

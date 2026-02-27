@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -13,7 +13,7 @@
 <header>
   <div class="logo">○ CodePulse</div>
   <nav>
-    <a href="{% url 'home' %}">Главная</a>
+    <a href="{% url 'posts:home' %}">Главная</a>
     <a href="#features">Возможности</a>
     <a href="#community">Сообщество</a>
     <a href="#projects">Проекты</a>
@@ -21,9 +21,9 @@
   </nav>
 
   {% if user.is_authenticated %}
-    <a class="connect-btn" href="{% url 'home' %}">Go to Feed</a>
+    <a class="connect-btn" href="{% url 'posts:home' %}">Go to Feed</a>
   {% else %}
-    <a class="connect-btn" href="{% url 'login' %}">Войти</a>
+    <a class="connect-btn" href="{% url 'accounts:login' %}">Войти</a>
   {% endif %}
 </header>
 
@@ -39,9 +39,9 @@
     <p>Социальная сеть для разработчиков: профиль, проекты, посты, знакомства и рост карьеры — в одном месте.</p>
 
     {% if user.is_authenticated %}
-      <a href="{% url 'home' %}" class="btn-primary">ПЕРЕЙТИ В ЛЕНТУ</a>
+      <a href="{% url 'posts:home' %}" class="btn-primary">ПЕРЕЙТИ В ЛЕНТУ</a>
     {% else %}
-      <a href="{% url 'register' %}" class="btn-primary">СОЗДАТЬ АККАУНТ</a>
+      <a href="{% url 'accounts:register' %}" class="btn-primary">СОЗДАТЬ АККАУНТ</a>
     {% endif %}
   </div>
 </section>
@@ -71,9 +71,9 @@
     Покажи стек, опыт, проекты и достижения — и получай предложения, коллаборации и новые знакомства.
   </p>
   {% if user.is_authenticated %}
-    <a href="{% url 'home' %}" class="btn-primary" style="margin:2rem 0;">ОТКРЫТЬ ЛЕНТУ →</a>
+    <a href="{% url 'posts:home' %}" class="btn-primary" style="margin:2rem 0;">ОТКРЫТЬ ЛЕНТУ →</a>
   {% else %}
-    <a href="{% url 'register' %}" class="btn-primary" style="margin:2rem 0;">НАЧАТЬ →</a>
+    <a href="{% url 'accounts:register' %}" class="btn-primary" style="margin:2rem 0;">НАЧАТЬ →</a>
   {% endif %}
 
   <div class="pools" id="community">

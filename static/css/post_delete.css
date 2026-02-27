@@ -1,0 +1,101 @@
+.delete-confirm-container {
+    max-width: 600px;
+    margin: clamp(64px, 10vh, 100px) auto;
+    background: rgba(20, 30, 60, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: 20px;
+    padding: clamp(28px, 6vw, 40px);
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(255, 107, 107, 0.2);
+}
+
+.delete-icon {
+    font-size: 5rem;
+    color: #ff6b6b;
+    margin-bottom: 20px;
+}
+
+.delete-title {
+    font-size: 2rem;
+    color: #ff6b6b;
+    margin-bottom: 20px;
+}
+
+.delete-message {
+    color: #e0f7ff;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.delete-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.btn-delete {
+    background: linear-gradient(90deg, #ff6b6b, #ff4444);
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+}
+
+.btn-delete:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(255, 107, 107, 0.5);
+}
+
+.btn-cancel {
+    background: transparent;
+    color: #a0d0ff;
+    border: 2px solid #a0d0ff;
+    padding: 12px 40px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-cancel:hover {
+    background: rgba(160, 208, 255, 0.1);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .delete-confirm-container {
+        margin: 40px auto;
+        padding: 24px 18px;
+        border-radius: 16px;
+    }
+
+    .delete-buttons {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .btn-delete,
+    .btn-cancel {
+        width: 100%;
+        padding-inline: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .delete-confirm-container {
+        margin: 24px auto 32px;
+        padding: 20px 14px;
+    }
+}
+

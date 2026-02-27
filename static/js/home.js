@@ -30,7 +30,7 @@ $(document).ready(function() {
             const files = $(this)[0].files;
 
             if (!files || files.length === 0) {
-                attachText.text('Вложение');
+                attachText.text('');
             } else if (files.length === 1) {
                 const name = files[0].name;
                 attachText.text(name.length > 20 ? '1 файл' : name);
@@ -98,26 +98,16 @@ $(document).ready(function() {
                     console.log('Успех:', response);
 
                     if (response.success) {
-                        const alertHtml = `
-                            <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                                ${response.message}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        `;
-
-                        $form.after(alertHtml);
-
                         $form[0].reset();
                         $('.js-attach-text').text('Вложение');
 
-                        setTimeout(function() {
-                            $('.alert-success').alert('close');
-                        }, 3000);
+                        if (response.html) {
+                            const $target = $('#new-posts-target');
+                            if ($target.length) {
+                                $target.prepend(response.html);
+                            }
+                        }
 
-                        // Перезагружаем страницу через 1 секунду
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1000);
                     } else {
                         console.log('Ошибки валидации:', response.errors);
 

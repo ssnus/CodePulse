@@ -107,7 +107,7 @@
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{% url 'profile' request.user.username %}" class="btn btn-secondary me-md-2">
+                            <a href="{% url 'profiles:profile' request.user.username %}" class="btn btn-secondary me-md-2">
                                 <i class="bi bi-x-circle"></i> Отмена
                             </a>
                             <button type="submit" class="btn btn-primary">

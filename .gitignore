@@ -19,7 +19,7 @@ migrations/__pycache__/
 # Environments
 venv/
 .env
-.env.*
+.env
 .venv/
 env/
 ENV/

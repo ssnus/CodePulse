@@ -1,8 +1,12 @@
 from django.urls import path
 from . import views
 
+app_name = 'profiles'
+
 urlpatterns = [
-    path('edit/', views.profile_edit_view, name='profile_edit'),
-    path('<str:username>/', views.profile_view, name='profile'),
-    path('<str:username>/follow/', views.follow_toggle_view, name='follow_toggle'),
+    path('edit/', views.ProfileUpdateView.as_view(), name='profile_edit'),
+
+    path('<str:username>/', views.ProfileDetailView.as_view(), name='profile'),
+
+    path('<str:username>/follow/', views.FollowToggleView.as_view(), name='follow_toggle'),
 ]

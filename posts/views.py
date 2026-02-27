@@ -1,160 +1,208 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import ListView, DetailView, CreateView, DeleteView, View
+from django.views.generic.edit import FormMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import get_object_or_404, redirect
 from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
 from django.contrib import messages
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
+from django.db.models import Q, Exists, OuterRef
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from .models import Post, Comment, Attachment
+from profiles.models import Follow
 from .forms import PostForm, CommentForm
 
 
-def home_view(request):
-    """Главная страница (лента новостей)"""
-    if request.user.is_authenticated:
-        posts = (
-            Post.objects.select_related('author', 'author__profile')
-            .prefetch_related('comments__author')
-            .all()
-            .order_by('-created_at')[:20]
+class HomeView(LoginRequiredMixin, ListView):
+    model = Post
+    template_name = 'posts/home.html'
+    context_object_name = 'posts'
+    paginate_by = 20
+
+    def get_queryset(self):
+        following_subquery = Follow.objects.filter(
+            follower=self.request.user,
+            following=OuterRef('author')
         )
 
-        # Форма для создания поста
-        if request.method == 'POST':
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                form = PostForm(request.POST, request.FILES)
-                if form.is_valid():
-                    post = form.save(commit=False)
-                    post.author = request.user
-                    post.save()
+        return Post.objects.select_related(
+            'author', 'author__profile'
+        ).prefetch_related('comments__author').annotate(
+            is_following=Exists(following_subquery)
+        ).order_by('-created_at')
 
-                    files_saved = 0
-                    if 'attachments' in request.FILES:
-                        for f in request.FILES.getlist('attachments'):
-                            Attachment.objects.create(post=post, file=f)
-                            files_saved += 1
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = PostForm()
+        context['title'] = 'Лента'
+        return context
 
-                    return JsonResponse({
-                        'success': True,
-                        'message': f'Пост успешно опубликован! ({files_saved} файлов)',
-                        'redirect_url': reverse('home')
-                    })
-                else:
-                    errors = {}
-                    for field, error_list in form.errors.items():
-                        errors[field] = [str(e) for e in error_list]
-                    return JsonResponse({
-                        'success': False,
-                        'errors': errors
-                    }, status=400)
-            else:
-                form = PostForm(request.POST, request.FILES)
-                if form.is_valid():
-                    post = form.save(commit=False)
-                    post.author = request.user
-                    post.save()
-
-                    if 'attachments' in request.FILES:
-                        for f in request.FILES.getlist('attachments'):
-                            Attachment.objects.create(post=post, file=f)
-
-                    messages.success(request, 'Пост успешно опубликован!')
-                    return redirect('home')
-        else:
-            form = PostForm()
-
-        context = {
-            'posts': posts,
-            'form': form,
-            'title': 'Лента'
-        }
-        return render(request, 'posts/home.html', context)
-    else:
-        return render(request, 'posts/welcome.html', {'title': 'Добро пожаловать'})
-
-
-@login_required
-def post_create_view(request):
-    """Создание нового поста"""
-    if request.method == 'POST':
+    def post(self, request, *args, **kwargs):
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.save()
 
-            if 'attachments' in request.FILES:
-                for f in request.FILES.getlist('attachments'):
-                    Attachment.objects.create(post=post, file=f)
+            files = request.FILES.getlist('attachments')
+            if len(files) > 5:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse(
+                        {
+                            'success': False,
+                            'errors': {'attachments': ['Можно прикрепить не более 5 файлов.']},
+                        },
+                        status=400,
+                    )
+                return redirect('posts:home')
 
-            messages.success(request, 'Пост успешно опубликован!')
-            return redirect('home')
-        else:
-            print("ОШИБКИ ФОРМЫ:", form.errors.as_data())
-    else:
-        form = PostForm()
+            for f in files:
+                Attachment.objects.create(post=post, file=f)
 
-    context = {
-        'form': form,
-        'title': 'Создать пост'
-    }
-    return render(request, 'posts/post_form.html', context)
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                post_html = render_to_string(
+                    'posts/_post_card.html',
+                    {'post': post, 'request': request}
+                )
+                return JsonResponse({
+                    'success': True,
+                    'html': post_html,
+                })
+            return redirect('posts:home')
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            errors = {field: [str(e) for e in errs] for field, errs in form.errors.items()}
+            return JsonResponse({'success': False, 'errors': errors}, status=400)
+
+        context = self.get_context_data(form=form)
+        return self.render_to_response(context)
+
+class SearchView(ListView):
+    template_name = 'posts/search_results.html'
+    context_object_name = 'posts'
+    paginate_by = 20
+
+    def get_queryset(self):
+        query = self.request.GET.get('q', '').strip().lower()
+        if not query:
+            return Post.objects.none()
+
+        return Post.objects.filter(
+            content_lower__contains=query
+        ).select_related('author', 'author__profile')
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            queryset = self.get_queryset()
+            query = request.GET.get('q', '').strip().lower()
+
+            users = User.objects.filter(
+                Q(username__icontains=query) | Q(first_name__icontains=query)
+            ).select_related('profile')[:3]
+
+            results = []
+            for u in users:
+                results.append({
+                    'type': 'Пользователь',
+                    'title': f"@{u.username}",
+                    'url': reverse('profiles:profile', kwargs={'username': u.username}),  # ✅ reverse
+                    'icon': 'bi-person'
+                })
+
+            for p in queryset[:3]:
+                content_preview = p.content[:40] + '...' if p.content else ''
+                results.append({
+                    'type': 'Пост',
+                    'title': content_preview,
+                    'url': reverse('posts:post_detail', kwargs={'pk': p.pk}),  # ✅ reverse
+                    'icon': 'bi-file-post'
+                })
+
+            return JsonResponse({'results': results})
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.get('q', '').strip().lower()  # ✅ .lower()
+
+        users = User.objects.filter(
+            Q(username__icontains=query) | Q(first_name__icontains=query)
+        ).select_related('profile')[:3]
+
+        context['query'] = query
+        context['users'] = users
+        context['title'] = f'Поиск: {query}'
+        return context
 
 
-@login_required
-def post_delete_view(request, pk):
-    """Удаление поста"""
-    post = get_object_or_404(Post, pk=pk)
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'posts/post_form.html'
+    success_url = reverse_lazy('posts:home')
 
-    if post.author != request.user:
-        messages.error(request, 'Вы не можете удалить этот пост!')
-        return redirect('home')
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        response = super().form_valid(form)
 
-    if request.method == 'POST':
-        post.delete()
-        messages.success(request, 'Пост успешно удалён!')
-        return redirect('home')
+        if 'attachments' in self.request.FILES:
+            for f in self.request.FILES.getlist('attachments'):
+                Attachment.objects.create(post=self.object, file=f)
 
-    context = {
-        'post': post,
-        'title': 'Удалить пост'
-    }
-    return render(request, 'posts/post_confirm_delete.html', context)
+        return response
 
 
-@login_required
-def post_detail_view(request, pk):
-    """Детальный просмотр поста + комментарии"""
-    post = get_object_or_404(
-        Post.objects.select_related('author', 'author__profile').prefetch_related('comments__author'),
-        pk=pk,
-    )
+class PostDetailView(DetailView, FormMixin):
+    model = Post
+    template_name = 'posts/post_detail.html'
+    form_class = CommentForm
+    context_object_name = 'post'
 
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
+    def get_queryset(self):
+        return Post.objects.select_related('author', 'author__profile').prefetch_related('comments__author')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.get_form()
+        context['comments'] = self.object.comments.order_by('created_at')
+        context['title'] = f'Пост от {self.object.author.username}'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
         if form.is_valid():
             comment = form.save(commit=False)
-            comment.post = post
+            comment.post = self.object
             comment.author = request.user
             comment.save()
-            messages.success(request, 'Комментарий добавлен.')
-            return redirect('post_detail', pk=post.pk)
-    else:
-        form = CommentForm()
+            return redirect('posts:post_detail', pk=self.object.pk)
+        return self.render_to_response(self.get_context_data(form=form))
 
-    context = {
-        'post': post,
-        'form': form,
-        'comments': post.comments.all(),
-        'title': f'Пост от {post.author.username}',
-    }
-    return render(request, 'posts/post_detail.html', context)
+
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Post
+    template_name = 'posts/post_confirm_delete.html'
+    success_url = reverse_lazy('posts:home')
+
+    def test_func(self):
+        post = self.get_object()
+        return post.author == self.request.user
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Пост успешно удалён!')
+        return super().delete(request, *args, **kwargs)
+
 
 
 @login_required
-def post_like_toggle_view(request, pk):
+def post_like_toggle(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    liked = False
+    liked = request.user in post.likes.all()
 
-    if request.user in post.likes.all():
+    if liked:
         post.likes.remove(request.user)
         liked = False
     else:
@@ -162,20 +210,14 @@ def post_like_toggle_view(request, pk):
         liked = True
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({
-            'liked': liked,
-            'total_likes': post.likes.count()
-        })
+        return JsonResponse({'liked': liked, 'total_likes': post.likes.count()})
 
-    next_url = request.POST.get('next') or request.GET.get('next') or 'home'
-    if next_url == 'post_detail':
-        return redirect('post_detail', pk=post.pk)
+    next_url = request.POST.get('next') or request.GET.get('next') or 'posts:home'
     return redirect(next_url)
 
 @login_required
-def post_comment_create_view(request, pk):
+def post_comment_create(request, pk):
     post = get_object_or_404(Post, pk=pk)
-
     if request.method == 'POST':
         form = CommentForm(request.POST)
         if form.is_valid():
@@ -183,9 +225,6 @@ def post_comment_create_view(request, pk):
             comment.post = post
             comment.author = request.user
             comment.save()
-            messages.success(request, 'Комментарий добавлен.')
 
-    next_url = request.POST.get('next') or 'home'
-    if next_url == 'post_detail':
-        return redirect('post_detail', pk=post.pk)
+    next_url = request.POST.get('next') or 'posts:home'
     return redirect(next_url)

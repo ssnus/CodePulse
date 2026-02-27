@@ -1,11 +1,11 @@
 .post-detail-container {
     max-width: 800px;
-    margin: 50px auto;
+    margin: clamp(32px, 8vh, 50px) auto;
     background: rgba(20, 30, 60, 0.8);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(0, 212, 255, 0.25);
     border-radius: 20px;
-    padding: 40px;
+    padding: clamp(24px, 5vw, 40px);
     box-shadow: 0 20px 60px rgba(0, 212, 255, 0.15);
 }
 
@@ -52,11 +52,14 @@
 
 .post-detail-image {
     width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 60vh;
     border-radius: 15px;
     margin-bottom: 30px;
-    max-height: 600px;
-    object-fit: cover;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    display: block;
+    object-fit: contain;
 }
 
 .post-detail-actions {
@@ -110,5 +113,35 @@
 .post-comment-body {
     color: #e0f7ff;
     padding: 10px;
+}
+
+@media (max-width: 768px) {
+    .post-detail-container {
+        margin: 24px auto;
+        padding: 24px 18px;
+        border-radius: 16px;
+    }
+
+    .post-detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .post-detail-avatar {
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .post-detail-container {
+        margin: 16px auto 28px;
+        padding: 20px 14px;
+    }
+
+    .post-detail-image {
+        border-radius: 12px;
+        max-height: 50vh;
+    }
 }
 

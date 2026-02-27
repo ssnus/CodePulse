@@ -4,81 +4,15 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block extra_css %}
-<style>
-.create-post-container {
-    max-width: 800px;
-    margin: 50px auto;
-    background: rgba(20, 30, 60, 0.6);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 212, 255, 0.25);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 20px 60px rgba(0, 212, 255, 0.1);
-}
-
-.form-title {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 2.5rem;
-    background: linear-gradient(90deg, #00d4ff, #a78bfa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.btn-submit {
-    background: linear-gradient(90deg, #00d4ff, #0099cc);
-    color: white;
-    padding: 12px 40px;
-    border: none;
-    border-radius: 50px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
-}
-
-.btn-submit:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 40px rgba(0, 212, 255, 0.5);
-}
-
-.btn-cancel {
-    background: transparent;
-    color: #a0d0ff;
-    border: 2px solid #a0d0ff;
-    padding: 12px 40px;
-    border-radius: 50px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.btn-cancel:hover {
-    background: rgba(160, 208, 255, 0.1);
-    color: white;
-}
-</style>
+<link rel="stylesheet" href="{% static 'css/post_form.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="create-post-container">
     <h1 class="form-title">{{ title }}</h1>
 
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" id="ajax-post-form">
         {% csrf_token %}
-
-        {% if form.errors %}
-            <div class="alert alert-danger" style="border-radius: 15px; margin-bottom: 20px;">
-                <strong>Ошибка!</strong> Пожалуйста, исправьте ошибки в форме.
-                <small>{{ form.non_field_errors }} {{ form.attachments.errors }}</small>
-            </div>
-        {% endif %}
-
         <div class="mb-4">
             {{ form.content }}
             {% if form.content.errors %}
@@ -109,37 +43,14 @@
             <button type="submit" class="btn-submit">
                 <i class="bi bi-send"></i> Опубликовать
             </button>
-            <a href="{% url 'home' %}" class="btn-cancel">
+            <a href="{% url 'posts:home' %}" class="btn-cancel">
                 <i class="bi bi-x-circle"></i> Отмена
             </a>
         </div>
     </form>
 </div>
+{% endblock %}
 
-<script>
-// Исправлено: слушаем id_attachments
-const fileInput = document.getElementById('id_attachments');
-if (fileInput) {
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        const preview = document.getElementById('image-preview');
-        const previewImg = document.getElementById('preview-img');
-
-        if (file && file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                previewImg.src = event.target.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        } else if (file) {
-            // Если выбран не файл изображения (например, текст)
-            preview.style.display = 'block';
-            previewImg.style.display = 'none';
-        } else {
-            preview.style.display = 'none';
-        }
-    });
-}
-</script>
+{% block extra_js %}
+<script src="{% static 'js/post_form.js' %}"></script>
 {% endblock %}

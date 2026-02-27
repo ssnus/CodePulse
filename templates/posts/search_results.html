@@ -1,0 +1,48 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-white">Результаты поиска для: <span class="text-primary">{{ query }}</span></h2>
+    <hr class="border-secondary">
+
+    <div class="row">
+        <div class="col-md-4">
+            <h4 class="text-white mb-3"><i class="bi bi-people"></i> Люди</h4>
+            {% for u in users %}
+                <div class="card bg-dark text-white mb-2 border-secondary">
+                    <div class="card-body d-flex align-items-center">
+                        {% if u.profile.avatar %}
+                            <img src="{{ u.profile.avatar.url }}" class="rounded-circle me-3" width="40" height="40" style="object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle me-3 bg-secondary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-person"></i>
+                            </div>
+                        {% endif %}
+                        <a href="{% url 'profiles:profile' u.username %}" class="text-decoration-none text-white fw-bold">@{{ u.username }}</a>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-muted">Пользователи не найдены.</p>
+            {% endfor %}
+        </div>
+
+        <div class="col-md-8">
+            <h4 class="text-white mb-3"><i class="bi bi-chat-left-text"></i> Посты</h4>
+            {% for post in posts %}
+                <div class="card bg-dark text-white mb-3 border-secondary">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                             <h6 class="text-primary mb-0">@{{ post.author.username }}</h6>
+                             <small class="text-muted ms-2">{{ post.created_at|date:"d.m.Y H:i" }}</small>
+                        </div>
+                        <p class="card-text">{{ post.content|truncatewords:30 }}</p>
+                        <a href="{% url 'posts:post_detail' post.pk %}" class="btn btn-outline-primary btn-sm">Перейти к посту</a>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-muted">Посты по этому запросу не найдены.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

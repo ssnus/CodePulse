@@ -1,54 +1,72 @@
-from django.shortcuts import render, redirect
+from django.views.generic import FormView, RedirectView
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.urls import reverse_lazy
+from django.shortcuts import redirect
+
 from .forms import UserRegisterForm, UserLoginForm
 
 
-def register_view(request):
+class RegisterView(FormView):
     """Регистрация нового пользователя"""
-    if request.user.is_authenticated:
-        return redirect('home')
+    template_name = 'accounts/register.html'
+    form_class = UserRegisterForm
+    success_url = reverse_lazy('accounts:login')
 
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Аккаунт {username} создан успешно! Теперь вы можете войти.')
-            return redirect('login')
-    else:
-        form = UserRegisterForm()
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            messages.info(request, 'Вы уже авторизованы.')
+            return redirect('posts:home')
+        return super().dispatch(request, *args, **kwargs)
 
-    return render(request, 'accounts/register.html', {'form': form, 'title': 'Регистрация'})
+    def form_valid(self, form):
+        user = form.save()
+        username = form.cleaned_data.get('username')
+        messages.success(self.request, f'Аккаунт {username} создан успешно! Теперь вы можете войти.')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Регистрация'
+        return context
 
 
-def login_view(request):
+class LoginView(FormView):
     """Вход пользователя"""
-    if request.user.is_authenticated:
-        return redirect('home')
+    template_name = 'accounts/login.html'
+    form_class = UserLoginForm
+    success_url = reverse_lazy('posts:home')
 
-    if request.method == 'POST':
-        form = UserLoginForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            messages.info(request, 'Вы уже авторизованы.')
+            return redirect('posts:home')
+        return super().dispatch(request, *args, **kwargs)
 
-            if user is not None:
-                login(request, user)
-                messages.success(request, f'Добро пожаловать, {username}!')
-                return redirect('home')
-            else:
-                messages.error(request, 'Неверное имя пользователя или пароль.')
-    else:
-        form = UserLoginForm()
+    def form_valid(self, form):
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password')
+        user = authenticate(username=username, password=password)
 
-    return render(request, 'accounts/login.html', {'form': form, 'title': 'Вход'})
+        if user is not None:
+            login(self.request, user)
+            messages.success(self.request, f'Добро пожаловать, {username}!')
+            return super().form_valid(form)
+        else:
+            messages.error(self.request, 'Неверное имя пользователя или пароль.')
+            return self.form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Вход'
+        return context
 
 
-def logout_view(request):
+class LogoutView(RedirectView):
     """Выход пользователя"""
-    logout(request)
-    messages.info(request, 'Вы успешно вышли из системы.')
-    return redirect('home')
+    url = reverse_lazy('posts:home')
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        messages.info(request, 'Вы успешно вышли из системы.')
+        return super().get(request, *args, **kwargs)
